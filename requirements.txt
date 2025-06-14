@@ -1,0 +1,6 @@
+playwright==1.48.0
+langchain==0.3.3
+langchain-community==0.3.2
+huggingface_hub==0.26.0
+chromadb==0.5.15
+numpy==1.26.4
