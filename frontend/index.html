@@ -3,215 +3,856 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Processing App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.9/babel.min.js"></script>
+    <meta name="description" content="Professional Book Publication Workflow Tool">
+    <title>Book Publication Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2A4E9C; /* Richer blue for professionalism */
+            --secondary: #F4A261; /* Sophisticated warm accent */
+            --background: #F9FBFD; /* Softer background */
+            --card-bg: rgba(255, 255, 255, 0.95); /* Enhanced glassmorphism */
+            --text: #1A2533; /* Deeper text color */
+            --text-secondary: #64748B; /* Slate gray for secondary text */
+            --success: #22C55E;
+            --error: #F43F5E;
+            --border: #E2E8F0;
+            --shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            --gradient: linear-gradient(135deg, var(--primary) 0%, #3B82F6 100%);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background) url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            background-blend-mode: overlay;
+            background-color: rgba(249, 251, 253, 0.9);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            position: fixed;
+            height: 100%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .sidebar-header img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+        }
+        .sidebar-header h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .sidebar-nav a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 4px;
+            height: 0;
+            background: var(--secondary);
+            transition: height 0.2s ease;
+            transform: translateY(-50%);
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: var(--gradient);
+            color: white;
+            transform: translateX(4px);
+        }
+        .sidebar-nav a:hover::after, .sidebar-nav a.active::after {
+            height: 50%;
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px 20px;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.full {
+            margin-left: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h2 {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+        .card:hover::before {
+            opacity: 1;
+        }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            background: var(--gradient);
+            color: white;
+        }
+        .btn-primary {
+            background: var(--gradient);
+        }
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+        }
+        .btn-success {
+            background: var(--success);
+        }
+        .btn-info {
+            background: #3B82F6;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        .btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn i {
+            margin-right: 10px;
+        }
+        .form-control, .form-select {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(42, 78, 156, 0.15);
+            outline: none;
+        }
+        #contentPreview {
+            min-height: 240px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            background: #FFFFFF;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 480px;
+            transition: all 0.3s ease;
+        }
+        .workflow-progress {
+            position: relative;
+            height: 10px;
+            background: var(--border);
+            border-radius: 5px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-milestone {
+            position: absolute;
+            top: -8px;
+            width: 24px;
+            height: 24px;
+            background: var(--background);
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+        .progress-milestone.completed {
+            background: var(--primary);
+            border-color: var(--secondary);
+            transform: translateX(-50%) scale(1.1);
+        }
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .progress-labels span.active {
+            color: var(--primary);
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .accessibility-badge {
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .accessible {
+            background: var(--success);
+        }
+        .not-accessible {
+            background: var(--error);
+        }
+        #workflowStatus {
+            background: rgba(42, 78, 156, 0.1);
+            color: var(--primary);
+            padding: 16px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 24px;
+            font-size: 1rem;
+        }
+        .processing-animation {
+            display: none;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .spinner {
+            width: 56px;
+            height: 56px;
+            background: url('https://img.icons8.com/ios-filled/50/2A4E9C/pen.png') no-repeat center;
+            background-size: contain;
+            animation: spin 1.2s ease-in-out infinite;
+            margin: 0 auto 12px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 14px;
+            background: var(--border);
+            border-radius: 7px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            width: 0;
+            animation: progress 2s ease-in-out forwards;
+        }
+        .checkmark {
+            width: 56px;
+            height: 56px;
+            background: url('https://img.icons8.com/ios-filled/50/F4A261/book.png') no-repeat center;
+            background-size: contain;
+            opacity: 0;
+            animation: scaleIn 0.8s ease-in forwards;
+        }
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+        }
+        .modal-header {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .modal-body {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            padding: 24px;
+        }
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 2000;
+            min-width: 340px;
+            padding: 16px 24px;
+            border-radius: 10px;
+            color: white;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(-24px);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-success {
+            background: var(--success);
+        }
+        .toast-error {
+            background: var(--error);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .loading-spinner {
+            width: 72px;
+            height: 72px;
+            border: 8px solid #fff;
+            border-top: 8px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .toggle-sidebar {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 1100;
+            display: none;
+            background: var(--gradient);
+            color: white;
+            border-radius: 10px;
+            padding: 12px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .toggle-sidebar:hover {
+            transform: scale(1.1);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 24px 16px;
+            }
+            .toggle-sidebar {
+                display: block;
+            }
+            .container {
+                padding: 16px;
+            }
+            h2 {
+                font-size: 2rem;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+            .workflow-progress {
+                margin-bottom: 24px;
+            }
+        }
+        @media (max-width: 576px) {
+            .progress-labels {
+                font-size: 0.8rem;
+            }
+            .card {
+                padding: 24px;
+            }
+            h2 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div id="root" class="container mx-auto p-4"></div>
-
-    <script type="text/babel">
-        const { createRoot } = ReactDOM;
-
-        function App() {
-            const [content, setContent] = React.useState('');
-            const [screenshotFilename, setScreenshotFilename] = React.useState('');
-            const [contentPath, setContentPath] = React.useState('');
-            const [sessionId, setSessionId] = React.useState('');
-            const [currentStep, setCurrentStep] = React.useState('');
-            const [currentContent, setCurrentContent] = React.useState('');
-            const [currentRole, setCurrentRole] = React.useState('');
-            const [versionId, setVersionId] = React.useState('');
-            const [searchQuery, setSearchQuery] = React.useState('');
-            const [searchResults, setSearchResults] = React.useState([]);
-            const [error, setError] = React.useState('');
-            const [showModal, setShowModal] = React.useState(false);
-
-            // Helper function to capitalize a string
-            const capitalize = (str) => {
-                if (!str) return '';
-                return str.charAt(0).toUpperCase() + str.slice(1);
-            };
-
-            const handleScrape = async () => {
-                setError('');
-                try {
-                    const response = await axios.get('http://localhost:5000/api/scrape');
-                    if (response.data.status === 'success') {
-                        setContent(response.data.content);
-                        setScreenshotFilename(response.data.screenshot_filename || '');
-                        setContentPath(response.data.content_path);
-                        setSessionId(response.data.session_id);
-                        setCurrentStep('spin');
-                        setCurrentContent(response.data.content);
-                        setCurrentRole('writer');
-                        setShowModal(true);
-                    } else {
-                        setError(response.data.message);
-                    }
-                } catch (err) {
-                    setError('Failed to scrape content. Ensure the Flask server is running at http://localhost:5000.');
-                    console.error('Scrape error:', err);
-                }
-            };
-
-            const handleProcess = async (approved) => {
-                setError('');
-                try {
-                    const response = await axios.post(
-                        `http://localhost:5000/api/process/${sessionId}/${currentStep}`,
-                        { content: currentContent, approved }
-                    );
-                    if (response.data.status === 'success') {
-                        setCurrentContent(response.data.content);
-                        setShowModal(false);
-                        if (currentStep === 'spin') {
-                            setCurrentStep('review');
-                            setCurrentRole('reviewer');
-                            setShowModal(true);
-                        } else if (currentStep === 'review') {
-                            setCurrentStep('edit');
-                            setCurrentRole('editor');
-                            setShowModal(true);
-                        } else if (currentStep === 'edit') {
-                            setVersionId(response.data.version_id);
-                            setCurrentStep('');
-                            setCurrentRole('');
-                        }
-                    } else {
-                        setError(response.data.message);
-                    }
-                } catch (err) {
-                    setError('Failed to process content. Check server logs for details.');
-                    console.error('Process error:', err);
-                }
-            };
-
-            const handleSearch = async () => {
-                setError('');
-                try {
-                    const response = await axios.post('http://localhost:5000/api/search', {
-                        query: searchQuery,
-                        doc_id: versionId,
-                        metadata: { chapter: '1' }
-                    });
-                    if (response.data.status === 'success') {
-                        setSearchResults(response.data.results.documents);
-                    } else {
-                        setError(response.data.message);
-                    }
-                } catch (err) {
-                    setError('Failed to search. Check server logs for details.');
-                    console.error('Search error:', err);
-                }
-            };
-
-            return (
-                <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-                    <h1 className="text-2xl font-bold mb-4">Content Processing App</h1>
-                    
-                    {/* Scrape Section */}
-                    <div className="mb-6">
-                        <button
-                            onClick={handleScrape}
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        >
-                            Scrape Content
-                        </button>
-                        {content && (
-                            <div className="mt-4">
-                                <h2 className="text-xl font-semibold">Scraped Content</h2>
-                                <p className="mt-2 text-gray-700">{content}...</p>
-                                <p className="text-sm text-gray-500">Saved to: {contentPath}</p>
-                                {screenshotFilename ? (
-                                    <img
-                                        src={`http://localhost:5000/screenshots/${screenshotFilename}`}
-                                        alt="Screenshot"
-                                        className="mt-2 max-w-full h-auto"
-                                        onError={() => setError('Screenshot not found. Check server logs.')}
-                                    />
-                                ) : (
-                                    <p className="text-sm text-gray-500 mt-2">No screenshot available.</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Version Info */}
-                    {versionId && (
-                        <div className="mb-6">
-                            <h2 className="text-xl font-semibold">Saved Version</h2>
-                            <p className="text-sm text-gray-500">Version ID: {versionId}</p>
-                        </div>
-                    )}
-
-                    {/* Search Section */}
-                    <div className="mb-6">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Enter search query"
-                            className="w-full p-2 border rounded mb-2"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-                            disabled={!searchQuery}
-                        >
-                            Search
-                        </button>
-                        {searchResults.length > 0 && (
-                            <div className="mt-4">
-                                <h2 className="text-xl font-semibold">Search Results</h2>
-                                {searchResults.map((result, index) => (
-                                    <p key={index} className="mt-2 text-gray-700">{result.slice(0, 500)}...</p>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Error Message */}
-                    {error && <p className="text-red-500">{error}</p>}
-
-                    {/* Review Modal */}
-                    {showModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                            <div className="bg-white p-6 rounded-lg max-w-2xl w-full">
-                                <h2 className="text-xl font-semibold mb-4">{capitalize(currentRole)} Review</h2>
-                                <p className="mb-4 text-gray-700">{currentContent.slice(0, 500)}...</p>
-                                <div className="flex justify-end space-x-2">
-                                    <button
-                                        onClick={() => handleProcess(true)}
-                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        onClick={() => handleProcess(false)}
-                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                    >
-                                        Reject
-                                    </button>
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    <button class="toggle-sidebar" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="https://img.icons8.com/ios-filled/50/2A4E9C/book.png" alt="App Logo">
+            <h3>PublishPro</h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#workflow" class="active"><i class="fas fa-cogs"></i> Workflow</a>
+            <a href="#analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
+            <a href="#export"><i class="fas fa-download"></i> Export</a>
+        </nav>
+    </div>
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <h2 id="workflow">Book Publication Workflow</h2>
+            <div class="workflow-progress">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-milestone" style="left: 0%;" id="milestone-scrape"></div>
+                <div class="progress-milestone" style="left: 33.33%;" id="milestone-spin"></div>
+                <div class="progress-milestone" style="left: 66.67%;" id="milestone-review"></div>
+                <div class="progress-milestone" style="left: 100%;" id="milestone-edit"></div>
+            </div>
+            <div class="progress-labels">
+                <span id="label-scrape">Scrape</span>
+                <span id="label-spin">Spin</span>
+                <span id="label-review">Review</span>
+                <span id="label-edit">Finalize</span>
+            </div>
+            <div class="card">
+                <div class="mb-4">
+                    <button class="btn btn-primary" onclick="scrapeContent()" data-bs-toggle="tooltip" title="Fetch content from source" aria-label="Scrape Content"><i class="fas fa-book-open"></i> Scrape Content</button>
                 </div>
-            );
+                <div class="mb-4">
+                    <label for="session_id" class="form-label fw-medium">Session ID:</label>
+                    <input type="text" id="session_id" class="form-control" readonly aria-describedby="sessionIdHelp">
+                    <div id="sessionIdHelp" class="form-text">Unique identifier for your workflow session.</div>
+                </div>
+                <div class="mb-4">
+                    <label for="contentPreview" class="form-label fw-medium">Content Preview:</label>
+                    <div id="contentPreview"></div>
+                    <button class="btn btn-info btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#previewModal" aria-label="View Content Preview"><i class="fas fa-eye"></i> View Full Preview</button>
+                </div>
+            </div>
+            <div class="card">
+                <label class="form-label fw-medium">Processing Steps:</label>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <button id="spinBtn" class="btn btn-secondary" onclick="confirmAction('spin')" disabled data-bs-toggle="tooltip" title="Rewrite content for uniqueness" aria-label="Spin Content"><i class="fas fa-pen"></i> Ai</button>
+                    <button id="reviewBtn" class="btn btn-secondary" onclick="confirmAction('review')" disabled data-bs-toggle="tooltip" title="Review rewritten content" aria-label="Review Content"><i class="fas fa-eye"></i> Review Content</button>
+                    <button id="editBtn" class="btn btn-secondary" onclick="confirmAction('edit')" disabled data-bs-toggle="tooltip" title="Finalize content edits" aria-label="Finalize Edit"><i class="fas fa-book"></i> Finalize Edit</button>
+                </div>
+                <div id="spinAnimation" class="processing-animation">
+                    <div class="spinner"></div>
+                    <p class="fw-medium">Spinning Content...</p>
+                </div>
+                <div id="reviewAnimation" class="processing-animation">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <p class="fw-medium">Reviewing Content...</p>
+                </div>
+                <div id="editAnimation" class="processing-animation">
+                    <div class="checkmark"></div>
+                    <p class="fw-medium">Finalizing Edits...</p>
+                </div>
+                <p id="workflowStatus" role="status"></p>
+            </div>
+            <div class="card" id="export">
+                <div class="mb-4">
+                    <label for="format" class="form-label fw-medium">Export Format:</label>
+                    <select id="format" class="form-select" aria-label="Select export format">
+                        <option value="epub">EPUB</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="pdf">PDF</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="exportContent()" data-bs-toggle="tooltip" title="Download content in selected format" aria-label="Export Content"><i class="fas fa-download"></i> Export Content</button>
+            </div>
+            <div class="card" id="analytics">
+                <button class="btn btn-info" onclick="analyzeContent()" data-bs-toggle="tooltip" title="Generate content analytics" aria-label="Analyze Content"><i class="fas fa-chart-bar"></i> Analyze Content</button>
+                <div id="analyticsContent" style="display:none;" role="region" aria-label="Content Analytics">
+                    <h3 class="mt-4 fw-bold">Content Analytics</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Summary:</strong> <span id="summary"></span></p>
+                            <p><strong>Readability Score:</strong> <span id="readability"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Sentiment:</strong> <span id="sentiment"></span></p>
+                            <p><strong>Accessibility:</strong> <span id="accessibility" class="accessibility-badge"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="previewModalLabel">Content Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalContentPreview"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="confirmModalLabel">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toastContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentSessionId = '';
+        let currentAction = '';
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} show`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('active');
+            mainContent.classList.toggle('full');
+        }
+
+        function updateProgress(completedSteps) {
+            const steps = ['scrape', 'spin', 'review', 'edit'];
+            const progress = (completedSteps.length / steps.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            steps.forEach((step, index) => {
+                const milestone = document.getElementById(`milestone-${step}`);
+                const label = document.getElementById(`label-${step}`);
+                milestone.classList.toggle('completed', completedSteps.includes(step));
+                label.classList.toggle('active', completedSteps.length === index);
+            });
+        }
+
+        async function updateWorkflowStatus() {
+            const sessionId = document.getElementById('session_id').value;
+            const spinBtn = document.getElementById('spinBtn');
+            const reviewBtn = document.getElementById('reviewBtn');
+            const editBtn = document.getElementById('editBtn');
+            const statusElement = document.getElementById('workflowStatus');
+            if (!sessionId) {
+                spinBtn.disabled = true;
+                reviewBtn.disabled = true;
+                editBtn.disabled = true;
+                statusElement.textContent = 'Begin by scraping content.';
+                updateProgress([]);
+                return;
+            }
+            try {
+                const response = await fetch(`/api/status/${sessionId}`);
+                if (!response.ok) throw new Error(`Status check failed: ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const completedSteps = data.completed_steps || [];
+                    spinBtn.disabled = !completedSteps.includes('scrape');
+                    reviewBtn.disabled = !completedSteps.includes('spin');
+                    editBtn.disabled = !completedSteps.includes('review');
+                    updateProgress(completedSteps);
+                    statusElement.textContent = !completedSteps.includes('scrape')
+                        ? 'Begin by scraping content.'
+                        : !completedSteps.includes('spin')
+                        ? 'Next: Spin the content.'
+                        : !completedSteps.includes('review')
+                        ? 'Next: Review the content.'
+                        : !completedSteps.includes('edit')
+                        ? 'Next: Finalize edits.'
+                        : 'Workflow complete! Ready to export or analyze.';
+                } else {
+                    statusElement.textContent = `Error: ${data.message}`;
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                statusElement.textContent = `Status check failed: ${e.message}`;
+                showToast(`Status check failed: ${e.message}`, 'error');
+            }
+        }
+
+        async function scrapeContent() {
+            const scrapeBtn = document.querySelector('button[onclick="scrapeContent()"]');
+            try {
+                showLoading(true);
+                scrapeBtn.disabled = true;
+                const response = await fetch('/api/scrape');
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${text}`);
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    currentSessionId = data.session_id;
+                    document.getElementById('session_id').value = data.session_id;
+                    document.getElementById('modalContentPreview').innerText = data.content;
+                    document.getElementById('contentPreview').innerText = data.content.substring(0, 200) + '...';
+                    updateAccessibilityStatus(data.accessibility_data);
+                    await updateWorkflowStatus();
+                    showToast('Content scraped successfully!', 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast(`Failed to scrape content: ${e.message}`, 'error');
+            } finally {
+                showLoading(false);
+                scrapeBtn.disabled = false;
+            }
+        }
+
+        function confirmAction(step) {
+            currentAction = step;
+            const confirmMessage = document.getElementById('confirmMessage');
+            confirmMessage.innerText = `Are you sure you want to ${step} the content?`;
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            confirmModal.show();
+        }
+
+        document.getElementById('confirmActionBtn').addEventListener('click', async () => {
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            confirmModal.hide();
+            await processContent(currentAction);
+        });
+
+        async function processContent(step) {
+            const sessionId = document.getElementById('session_id').value;
+            if (!sessionId) {
+                showToast('Please scrape content first.', 'error');
+                return;
+            }
+            const animations = {
+                spin: document.getElementById('spinAnimation'),
+                review: document.getElementById('reviewAnimation'),
+                edit: document.getElementById('editAnimation')
+            };
+            const currentAnimation = animations[step];
+            try {
+                showLoading(true);
+                currentAnimation.style.display = 'block';
+                const content = document.getElementById('modalContentPreview').innerText;
+                const response = await fetch(`/api/process/${sessionId}/${step}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, approved: true })
+                });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${text}`);
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('modalContentPreview').innerText = data.content;
+                    document.getElementById('contentPreview').innerText = data.content.substring(0, 200) + '...';
+                    if (data.accessibility_data) updateAccessibilityStatus(data.accessibility_data);
+                    await updateWorkflowStatus();
+                    showToast(`${step.charAt(0).toUpperCase() + step.slice(1)} completed successfully!`, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast(`Failed to process content: ${e.message}`, 'error');
+            } finally {
+                currentAnimation.style.display = 'none';
+                showLoading(false);
+            }
+        }
+
+        async function exportContent() {
+            const sessionId = document.getElementById('session_id').value;
+            const format = document.getElementById('format').value;
+            if (!sessionId) {
+                showToast('Please scrape content first.', 'error');
+                return;
+            }
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/export/${sessionId}/${format}`);
+                if (response.ok && format !== 'json') {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `book_${sessionId}.${format === 'markdown' ? 'md' : format}`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Content exported successfully!', 'success');
+                } else {
+                    const data = await response.json();
+                    showToast(data.status === 'success' ? 'Export successful!' : data.message, data.status === 'success' ? 'success' : 'error');
+                }
+            } catch (e) {
+                showToast(`Failed to export content: ${e.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function analyzeContent() {
+            const sessionId = document.getElementById('session_id').value;
+            if (!sessionId) {
+                showToast('Please scrape content first.', 'error');
+                return;
+            }
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/analyze/${sessionId}`);
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${text}`);
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const analytics = document.getElementById('analyticsContent');
+                    analytics.style.display = 'block';
+                    analytics.classList.add('show');
+                    document.getElementById('summary').innerText = data.analysis.summary;
+                    document.getElementById('readability').innerText = data.analysis.readability;
+                    document.getElementById('sentiment').innerText = JSON.stringify(data.analysis.sentiment);
+                    showToast('Analytics generated successfully!', 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast(`Failed to analyze content: ${e.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateAccessibilityStatus(accessibilityData) {
+            const accessibilitySpan = document.getElementById('accessibility');
+            const hasMissingAlt = accessibilityData.alt_texts.some(alt => !alt);
+            accessibilitySpan.innerHTML = `${hasMissingAlt ? 'Not Fully Accessible' : 'Accessible'} <i class="fas fa-${hasMissingAlt ? 'exclamation-triangle' : 'check-circle'}"></i>`;
+            accessibilitySpan.classList.add(hasMissingAlt ? 'not-accessible' : 'accessible');
+            accessibilitySpan.classList.remove(hasMissingAlt ? 'accessible' : 'not-accessible');
+        }
+
+        window.onload = () => {
+            updateWorkflowStatus();
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            [...tooltipTriggerList].forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+            document.getElementById('previewModal').addEventListener('show.bs.modal', () => {
+                document.getElementById('modalContentPreview').innerText = document.getElementById('modalContentPreview').innerText || 'No content available.';
+            });
+        };
     </script>
 </body>
 </html>

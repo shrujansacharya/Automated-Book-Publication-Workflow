@@ -6,3 +6,6 @@ chromadb==0.5.15
 numpy==1.26.4
 flask==3.0.3
 flask-cors==5.0.0
+ebooklib==0.18
+textstat==0.7.4
+vaderSentiment==3.3.2
