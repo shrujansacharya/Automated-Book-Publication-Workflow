@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Processing App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.9/babel.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="container mx-auto p-4"></div>
+
+    <script type="text/babel">
+        const { createRoot } = ReactDOM;
+
+        function App() {
+            const [content, setContent] = React.useState('');
+            const [screenshotFilename, setScreenshotFilename] = React.useState('');
+            const [contentPath, setContentPath] = React.useState('');
+            const [sessionId, setSessionId] = React.useState('');
+            const [currentStep, setCurrentStep] = React.useState('');
+            const [currentContent, setCurrentContent] = React.useState('');
+            const [currentRole, setCurrentRole] = React.useState('');
+            const [versionId, setVersionId] = React.useState('');
+            const [searchQuery, setSearchQuery] = React.useState('');
+            const [searchResults, setSearchResults] = React.useState([]);
+            const [error, setError] = React.useState('');
+            const [showModal, setShowModal] = React.useState(false);
+
+            // Helper function to capitalize a string
+            const capitalize = (str) => {
+                if (!str) return '';
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            };
+
+            const handleScrape = async () => {
+                setError('');
+                try {
+                    const response = await axios.get('http://localhost:5000/api/scrape');
+                    if (response.data.status === 'success') {
+                        setContent(response.data.content);
+                        setScreenshotFilename(response.data.screenshot_filename || '');
+                        setContentPath(response.data.content_path);
+                        setSessionId(response.data.session_id);
+                        setCurrentStep('spin');
+                        setCurrentContent(response.data.content);
+                        setCurrentRole('writer');
+                        setShowModal(true);
+                    } else {
+                        setError(response.data.message);
+                    }
+                } catch (err) {
+                    setError('Failed to scrape content. Ensure the Flask server is running at http://localhost:5000.');
+                    console.error('Scrape error:', err);
+                }
+            };
+
+            const handleProcess = async (approved) => {
+                setError('');
+                try {
+                    const response = await axios.post(
+                        `http://localhost:5000/api/process/${sessionId}/${currentStep}`,
+                        { content: currentContent, approved }
+                    );
+                    if (response.data.status === 'success') {
+                        setCurrentContent(response.data.content);
+                        setShowModal(false);
+                        if (currentStep === 'spin') {
+                            setCurrentStep('review');
+                            setCurrentRole('reviewer');
+                            setShowModal(true);
+                        } else if (currentStep === 'review') {
+                            setCurrentStep('edit');
+                            setCurrentRole('editor');
+                            setShowModal(true);
+                        } else if (currentStep === 'edit') {
+                            setVersionId(response.data.version_id);
+                            setCurrentStep('');
+                            setCurrentRole('');
+                        }
+                    } else {
+                        setError(response.data.message);
+                    }
+                } catch (err) {
+                    setError('Failed to process content. Check server logs for details.');
+                    console.error('Process error:', err);
+                }
+            };
+
+            const handleSearch = async () => {
+                setError('');
+                try {
+                    const response = await axios.post('http://localhost:5000/api/search', {
+                        query: searchQuery,
+                        doc_id: versionId,
+                        metadata: { chapter: '1' }
+                    });
+                    if (response.data.status === 'success') {
+                        setSearchResults(response.data.results.documents);
+                    } else {
+                        setError(response.data.message);
+                    }
+                } catch (err) {
+                    setError('Failed to search. Check server logs for details.');
+                    console.error('Search error:', err);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                    <h1 className="text-2xl font-bold mb-4">Content Processing App</h1>
+                    
+                    {/* Scrape Section */}
+                    <div className="mb-6">
+                        <button
+                            onClick={handleScrape}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                            Scrape Content
+                        </button>
+                        {content && (
+                            <div className="mt-4">
+                                <h2 className="text-xl font-semibold">Scraped Content</h2>
+                                <p className="mt-2 text-gray-700">{content}...</p>
+                                <p className="text-sm text-gray-500">Saved to: {contentPath}</p>
+                                {screenshotFilename ? (
+                                    <img
+                                        src={`http://localhost:5000/screenshots/${screenshotFilename}`}
+                                        alt="Screenshot"
+                                        className="mt-2 max-w-full h-auto"
+                                        onError={() => setError('Screenshot not found. Check server logs.')}
+                                    />
+                                ) : (
+                                    <p className="text-sm text-gray-500 mt-2">No screenshot available.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Version Info */}
+                    {versionId && (
+                        <div className="mb-6">
+                            <h2 className="text-xl font-semibold">Saved Version</h2>
+                            <p className="text-sm text-gray-500">Version ID: {versionId}</p>
+                        </div>
+                    )}
+
+                    {/* Search Section */}
+                    <div className="mb-6">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Enter search query"
+                            className="w-full p-2 border rounded mb-2"
+                        />
+                        <button
+                            onClick={handleSearch}
+                            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                            disabled={!searchQuery}
+                        >
+                            Search
+                        </button>
+                        {searchResults.length > 0 && (
+                            <div className="mt-4">
+                                <h2 className="text-xl font-semibold">Search Results</h2>
+                                {searchResults.map((result, index) => (
+                                    <p key={index} className="mt-2 text-gray-700">{result.slice(0, 500)}...</p>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Error Message */}
+                    {error && <p className="text-red-500">{error}</p>}
+
+                    {/* Review Modal */}
+                    {showModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                            <div className="bg-white p-6 rounded-lg max-w-2xl w-full">
+                                <h2 className="text-xl font-semibold mb-4">{capitalize(currentRole)} Review</h2>
+                                <p className="mb-4 text-gray-700">{currentContent.slice(0, 500)}...</p>
+                                <div className="flex justify-end space-x-2">
+                                    <button
+                                        onClick={() => handleProcess(true)}
+                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => handleProcess(false)}
+                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                    >
+                                        Reject
+                                    </button>
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

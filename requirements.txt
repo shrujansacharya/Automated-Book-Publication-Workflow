@@ -4,3 +4,5 @@ langchain-community==0.3.2
 huggingface_hub==0.26.0
 chromadb==0.5.15
 numpy==1.26.4
+flask==3.0.3
+flask-cors==5.0.0
